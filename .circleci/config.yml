@@ -1,0 +1,68 @@
+version: 2
+jobs:
+  build:
+    macos:
+      xcode: "10.1.0"
+    steps:
+      - checkout
+      - run: make deps
+      - run: make ci
+      - store_artifacts:
+          path: tmp/build/
+  build-bazel19:
+    macos:
+      xcode: "10.1.0"
+    steps:
+      - checkout
+      - run: make deps
+      - run: make deps-bazel19
+      - run: make ci
+      - store_artifacts:
+          path: tmp/build/
+  build-linux:
+    docker:
+      - image: circleci/buildpack-deps:bionic-curl
+    steps:
+      - checkout
+      - run: sudo apt-get install -y make
+      - run: CACHEDIR=.cache-linux sudo make deps-linux
+      - run: sudo chown -R circleci ~/bin ~/.bazel
+      - run: sudo make deps
+      - run: PATH=~/bin:$PATH make ci
+      - store_artifacts:
+          path: tmp/build/
+  build-linux-bazel19:
+    docker:
+      - image: circleci/buildpack-deps:bionic-curl
+    steps:
+      - checkout
+      - run: sudo apt-get install -y make
+      - run: CACHEDIR=.cache-linux sudo make deps-linux
+      - run: sudo chown -R circleci ~/bin ~/.bazel
+      - run: CACHEDIR=.cache-linux make deps-bazel19
+      - run: sudo make deps
+      - run: make deps-bazel19
+      - run: PATH=~/bin:$PATH make ci
+      - store_artifacts:
+          path: tmp/build/
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - build
+      - build-bazel19
+      - build-linux
+      - build-linux-bazel19
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build
+      - build-bazel19
+      - build-linux
+      - build-linux-bazel19

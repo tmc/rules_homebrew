@@ -1,0 +1,6 @@
+name: Project Template
+steps:
+  - label: make ci
+    command: make ci
+  - label: make ci (without cache)
+    command: TEST_TMPDIR=$(mktemp -d) make ci
