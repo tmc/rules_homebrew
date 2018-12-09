@@ -1,1 +1,3 @@
-This repository demonstrates a basic template for a bazel project and includes CircleCI and Buildkite configurations.
+rules_homebrew
+
+These Starlark rules provide the ability to install homebrew packages in a bazel build.

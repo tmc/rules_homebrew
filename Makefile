@@ -2,7 +2,7 @@
 
 UNAME ?= $(shell uname -s)
 BAZEL ?= $(shell which bazel)
-IMAGE ?= project_foo
+IMAGE ?= rules_homebrew
 CACHEDIR ?= .cache
 
 .PHONY: all
