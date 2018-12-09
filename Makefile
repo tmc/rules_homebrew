@@ -47,6 +47,14 @@ build:
 test:
 	bazel test //...
 
+.PHONY: lint
+lint:
+	bazel run //tools:lint
+
+.PHONY: lintfix
+lintfix:
+	bazel run //tools:lintfix
+
 .PHONY: linux-ci-image
 linux-ci-image: dockerfiles/Dockerfile
 	docker build -t ${IMAGE} -f dockerfiles/Dockerfile .
