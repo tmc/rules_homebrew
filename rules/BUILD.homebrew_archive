@@ -1,0 +1,17 @@
+filegroup(
+    name = "brew",
+    srcs = ["bin/brew"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "library",
+    srcs = glob(["Library/**"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "cellar",
+    srcs = ["Cellar"],
+    visibility = ["//visibility:public"],
+)

@@ -29,45 +29,17 @@ def _brew_packages_impl(repository_ctx):
     """Core implementation of brew_packages."""
 
     # necessary for bazel label addressing.
-    repository_ctx.file("BUILD", "")
-
-    repository_ctx.file("brew-wrapper", """#!/bin/bash
-set -euo pipefail
-# wait up to 20s for homebrew binary to be present
-(for i in $(seq 20); do (
-    test -f ../homebrew/bin/brew && break
-    echo 'waiting for @homebrew'
-    sleep 1
-    ); done
-test -f ../homebrew/bin/brew || exit 1
-)
-
-(for i in $(seq 20); do (
-    test -d ../homebrew_core/.github && break
-    echo 'waiting for @homebrew-core'
-    sleep 1
-    ); done
-test -d ../homebrew_core/.github || exit 1
-)
-#until test -f ../homebrew/bin/brew; do echo 'waiting for @homebrew'; sleep 1; done
-#until test -d ../homebrew_core/.github; do echo 'waiting for @homebrew_core'; sleep 1; done
-test -d ../homebrew/Library/Taps/homebrew || mkdir -p ../homebrew/Library/Taps/homebrew
-# Insert homebrew-core tap
-test -L ../homebrew/Library/Taps/homebrew/homebrew-core || (
-    cd ../homebrew/Library/Taps/homebrew/
-    ln -s ../../../../homebrew_core homebrew-core
-)
-export HOMEBREW_NO_AUTO_UPDATE=1
-../homebrew/bin/brew $*
-""")
+    repository_ctx.template("brew-wrapper.sh", repository_ctx.attr.brew_wrappper_template)
+    repository_ctx.template("BUILD", repository_ctx.attr.build_template, executable = False)
 
     to_install = _filter_installed_packages(repository_ctx, repository_ctx.attr.formulas)
     extra_args = []
     if repository_ctx.attr.verbose:
         extra_args += ["--verbose"]
+    # TODO(tmc): need to collect binaries
     if len(to_install) > 0:
         cmd = [
-            "./brew-wrapper",
+            "./brew-wrapper.sh",
             "install",
             # TODO(tmc): "--ignore-dependencies", # force our hand
         ] + to_install
@@ -78,12 +50,26 @@ export HOMEBREW_NO_AUTO_UPDATE=1
             fail("[brew_packges] " + result.stderr)
 
     for formula in repository_ctx.attr.formulas:
+        build_file_content = '''
+load("@com_github_tmc_rules_homebrew//rules:brew_package.bzl", "brew_package")
+
+brew_package(
+    name = "{formula}",
+    package = "{formula}",
+    visibility = ["//visibility:public"],
+)
+'''.format(formula = formula)
+        repository_ctx.file("%s/BUILD" % formula, build_file_content)
+
+    return
+
+    for formula in repository_ctx.attr.formulas:
         sh_binary_template = '''
 brew_binary(
     name = "{name}",
-    path = "{formula}/{version}/bin/{name}",
-    deps = ["@homebrew//:binaries","@homebrew_core//:allfiles","@homebrew//:allfiles", "@homebrew//:cellar"],
-    data = ["@homebrew//:binaries","@homebrew_core//:allfiles","@homebrew//:allfiles", "@homebrew//:cellar"],
+    #path = "{formula}/{version}/bin/{name}",
+    #deps = ["@homebrew//:binaries","@homebrew_core//:allfiles","@homebrew//:allfiles", "@homebrew//:cellar"],
+    #data = ["@homebrew//:binaries","@homebrew_core//:allfiles","@homebrew//:allfiles", "@homebrew//:cellar"],
     visibility = ["//visibility:public"],
 )
 '''
@@ -111,6 +97,8 @@ brew_packages = repository_rule(
     implementation = _brew_packages_impl,
     attrs = {
         "formulas": attr.string_list(mandatory = True),
+        "brew_wrappper_template": attr.label(default = "//scripts:brew-wrapper.sh"),
+        "build_template": attr.label(default = "//scripts:BUILD.brew_packages"),
         "verbose": attr.bool(),
     },
 )

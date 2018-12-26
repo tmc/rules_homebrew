@@ -1,5 +1,8 @@
+load("@com_github_tmc_rules_homebrew//rules:toolchains.bzl", "BREW_TOOLCHAIN")
+
 def _brew_binary_impl(ctx):
     binary = ctx.actions.declare_file(ctx.attr.name)
+    print("brew BINARRRYY!!", ctx.toolchains)
     ctx.actions.write(binary, ctx.expand_location("""#!/bin/bash
 exec $(location @homebrew//:cellar)/{path} $*
 """.format(path = ctx.attr.path, name = ctx.attr.name)), is_executable = True)
@@ -18,4 +21,5 @@ brew_binary = rule(
         "data": attr.label_list(allow_files = True),
     },
     executable = True,
+    toolchains = [BREW_TOOLCHAIN],
 )

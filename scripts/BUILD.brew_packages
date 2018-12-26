@@ -1,0 +1,11 @@
+sh_binary(
+    name = "brew",
+    srcs = ["brew-wrapper.sh"],
+    deps = [
+         #"@bazel_tools//tools/bash/runfiles:runfiles.bash"
+    ],
+    data = [
+        "@homebrew//:brew",
+        "@homebrew//:library",
+    ],
+)
