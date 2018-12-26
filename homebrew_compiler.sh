@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+set -x
 brew_binary="${1}"
 shift
 package="${1}"
@@ -7,10 +8,16 @@ shift
 output_file="${1}"
 shift
 
-set -x
+cellar_path=$(dirname $(dirname "${brew_binary}"))/Cellar
+
 export HOMEBREW_NO_AUTO_UPDATE=1
-#export HOME=$(mktemp -d)
-export HOME=/tmp/hbtmp
-"${brew_binary}" install --display-times --verbose "${package}" || echo 'install "failure'
-"${brew_binary}" ls --versions "${package}"
-tree > "${output_file}"
+export HOME=$(mktemp -d)
+"${brew_binary}" uninstall "${package}"
+#tree
+bash -x "${brew_binary}" install --display-times --verbose "${package}"
+#"${brew_binary}" postinstall "${package}"
+
+version=$("${brew_binary}" ls --versions "${package}" | tail -n1 | cut -d' ' -f2)
+mkdir -p $(dirname "${output_file}")
+#TODO(tmc): consider if this should be pkg_tar in starlark instead.
+tar -C "${cellar_path}/${package}/${version}" -cvf "${output_file}" .

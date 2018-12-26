@@ -10,7 +10,12 @@ def _brew_package_impl(ctx):
     #deps_files = depset(ctx.attr._brew_library.files)
     #all_files = depset([tarball], order = "postorder", transitive = deps_files)
 
-    cmd_raw = "tree; pwd; $(location %s) %s %s %s" % (tc.compiler.label, ctx.executable._brew_binary.path, ctx.attr.package, output.path)
+    cmd_raw = "pwd; $(location %s) %s %s %s" % (
+        tc.compiler.label,
+        ctx.executable._brew_binary.path,
+        ctx.attr.package,
+        output.path,
+    )
     inputs, cmd, input_manifests = ctx.resolve_command(
         command=cmd_raw,
         expand_locations=True,
@@ -26,7 +31,7 @@ def _brew_package_impl(ctx):
     #)
     print(ctx.executable)
     ctx.actions.run_shell(
-        inputs = [],
+        inputs = ctx.attr._brew_library.files,
         outputs = [output],
         progress_message = "Building %s" % ctx.attr.name,
         command = cmd,
