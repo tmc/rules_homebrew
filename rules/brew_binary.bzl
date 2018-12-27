@@ -2,8 +2,6 @@ load("@com_github_tmc_rules_homebrew//rules:toolchains.bzl", "BREW_TOOLCHAIN")
 
 def _brew_binary_impl(ctx):
     binary = ctx.actions.declare_file(ctx.attr.name)
-    print("toolchains:", ctx.toolchains)
-    print("toolchains:", ctx.files)
     ctx.actions.write(binary, ctx.expand_location("""#!/bin/bash
 tar xf external/{repository_name}/{formula}/pkg.tar
 exec ./bin/{name} $*

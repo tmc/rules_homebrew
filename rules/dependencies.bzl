@@ -12,4 +12,5 @@ def homebrew_rules_dependencies(
         brew_sha256 = brew_sha256,
         homebrew_core_commit = homebrew_core_commit,
         homebrew_core_sha256 = homebrew_core_sha256,
+        patches = ["@com_github_tmc_rules_homebrew//patches:homebrew-download-only.patch"],
     )

@@ -8,4 +8,5 @@ sh_binary(
         "@homebrew//:brew",
         "@homebrew//:library",
     ],
+	visibility = ["//visibility:public"],
 )

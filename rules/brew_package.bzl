@@ -21,7 +21,6 @@ def _brew_package_impl(ctx):
         expand_locations = True,
         tools = [tc.compiler],
     )
-    print(inputs, cmd, input_manifests)
 
     #cmd = 'tree'
     #ctx.actions.run(
@@ -30,16 +29,15 @@ def _brew_package_impl(ctx):
     #    tools = tc.compiler.files,
     #    arguments = ["$(location @homebrew//:brew)", ctx.attr.package ],
     #)
-    print(ctx.executable)
     ctx.actions.run_shell(
         #inputs = ctx.attr._brew_library.files,
         inputs = [],
         outputs = [output],
-        progress_message = "Building %s" % ctx.attr.name,
+        progress_message = "Building %s" % ctx.attr.package,
         command = cmd,
         #tools = [tc.compiler.files.to_list()[0]],
         #tools = tc.compiler.files + depset(ctx.attr._brew_binary),
-        tools = [tc.compiler.files.to_list()[1], ctx.executable._brew_binary],
+        tools = [tc.compiler.files.to_list()[1], ctx.executable._brew_binary, ctx.attr._brew_cellar.files.to_list()[0]],
         # TODO(tmc): use toolchain compiler
         # command = "{brew_cmd} install {name}; date > {output}".format(
         #     brew_cmd = tc.compiler,
@@ -66,6 +64,7 @@ brew_package = rule(
         "srcs": attr.label_list(allow_files = True),
         #"data": attr.label_list(allow_files = True),
         "_brew_library": attr.label(default = "@homebrew//:library"),
+        "_brew_cellar": attr.label(default = "@homebrew//:cellar"),
         "_brew_binary": attr.label(
             default = "@homebrew//:brew",
             executable = True,

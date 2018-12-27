@@ -30,27 +30,28 @@ def _brew_packages_impl(repository_ctx):
 
     # necessary for bazel label addressing.
     repository_ctx.template("brew-wrapper.sh", repository_ctx.attr.brew_wrappper_template)
-    #repository_ctx.template("BUILD", repository_ctx.attr.build_template, executable = False)
+    repository_ctx.template("BUILD", repository_ctx.attr.build_template, executable = False)
 
-    to_install = _filter_installed_packages(repository_ctx, repository_ctx.attr.formulas)
+    formulas = repository_ctx.attr.packages.keys()
+    to_fetch = _filter_installed_packages(repository_ctx, formulas)
     extra_args = []
     if repository_ctx.attr.verbose:
         extra_args += ["--verbose"]
 
-    # TODO(tmc): need to collect binaries
-    if len(to_install) > 0:
+    if len(to_fetch) > 0:
         cmd = [
             "./brew-wrapper.sh",
             "install",
+            "--no-sandbox",
             # TODO(tmc): "--ignore-dependencies", # force our hand
-        ] + to_install
+        ] + to_fetch
         result = repository_ctx.execute(cmd, quiet = False)
         if repository_ctx.attr.verbose:
             print("[rules_homebrew]", result.return_code, result.stdout, result.stderr)
         if result.return_code != 0:
             fail("[brew_packges] " + result.stderr)
 
-    for formula in repository_ctx.attr.formulas:
+    for formula in formulas:
         build_file_content = '''
 load("@com_github_tmc_rules_homebrew//rules:brew_package.bzl", "brew_package")
 
@@ -79,7 +80,7 @@ brew_binary(
             name = binary,
             formula = formula,
             version = formula_version,
-        ) for binary in _formula_binaries(repository_ctx, formula)])
+        ) for binary in repository_ctx.attr.packages[formula]])
         build_file_content += '''
 load("@com_github_tmc_rules_homebrew//rules:brew_binary.bzl", "brew_binary")
 
@@ -97,7 +98,7 @@ load("@com_github_tmc_rules_homebrew//rules:brew_binary.bzl", "brew_binary")
 brew_packages = repository_rule(
     implementation = _brew_packages_impl,
     attrs = {
-        "formulas": attr.string_list(mandatory = True),
+        "packages": attr.string_list_dict(mandatory = True),
         "brew_wrappper_template": attr.label(default = "//scripts:brew-wrapper.sh"),
         "build_template": attr.label(default = "//scripts:BUILD.brew_packages"),
         "verbose": attr.bool(),
