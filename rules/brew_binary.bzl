@@ -4,6 +4,8 @@ def _brew_binary_impl(ctx):
     binary = ctx.actions.declare_file(ctx.attr.name)
     ctx.actions.write(binary, ctx.expand_location("""#!/bin/bash
 tar xf external/{repository_name}/{formula}/pkg.tar
+pwd
+tree
 exec ./bin/{name} $*
 """.format(
         name = ctx.attr.name,

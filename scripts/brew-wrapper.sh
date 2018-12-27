@@ -8,11 +8,8 @@ test -f ../homebrew/bin/brew || (
     echo ''
 	exit 1
 )
-set -x
 export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_CACHE=$(pwd)/../homebrew/cache
 export HOMEBREW_BUILD_FROM_SOURCE=1
 export HOMEBREW_DOWNLOAD_ONLY=1
 ../homebrew/bin/brew $*
-# echo $(rlocation @homebrew//bin/brew)
-# ${RUNFILES_DIR}/homebrew/bin/brew $*

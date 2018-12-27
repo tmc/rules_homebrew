@@ -3,14 +3,14 @@ load(":toolchains.bzl", "BREW_TOOLCHAIN", "homebrew_toolchain_info")
 homebrew_toolchain_info(
     name = "homebrew_toolchain_info/homebrew",
     compiler = "@com_github_tmc_rules_homebrew//:homebrew_compiler",
-    plt = "leosx",
+    plt = "homebrew",
     visibility = ["//visibility:public"],
 )
 
 homebrew_toolchain_info(
     name = "homebrew_toolchain_info/linuxbrew",
     compiler = "@com_github_tmc_rules_homebrew//:linuxbrew_compiler",
-    plt = "le linuuooox",
+    plt = "linuxbrew",
 )
 
 toolchain(
