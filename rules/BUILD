@@ -16,10 +16,10 @@ homebrew_toolchain_info(
 toolchain(
     name = "homebrew",
     exec_compatible_with = [
-            "@bazel_tools//platforms:osx",
+        "@bazel_tools//platforms:osx",
     ],
     target_compatible_with = [
-            "@bazel_tools//platforms:osx",
+        "@bazel_tools//platforms:osx",
     ],
     toolchain = ":homebrew_toolchain_info/homebrew",
     toolchain_type = BREW_TOOLCHAIN,
@@ -28,12 +28,11 @@ toolchain(
 toolchain(
     name = "linuxbrew",
     exec_compatible_with = [
-            "@bazel_tools//platforms:linux",
+        "@bazel_tools//platforms:linux",
     ],
     target_compatible_with = [
-            "@bazel_tools//platforms:linux",
+        "@bazel_tools//platforms:linux",
     ],
     toolchain = ":homebrew_toolchain_info/linuxbrew",
     toolchain_type = BREW_TOOLCHAIN,
 )
-

@@ -1,13 +1,13 @@
 """An implementation of brew package support for bazel."""
 
 def _formula_version(ctx, formula):
-    r = ctx.execute(["./brew-wrapper", "ls", "--versions", formula])
+    r = ctx.execute(["./brew-wrapper.sh", "ls", "--versions", formula])
     if ctx.attr.verbose:
         print("[rules_homebrew]", r.return_code, r.stdout, r.stderr)
     return r.stdout.strip().split(" ")[-1]
 
 def _formula_binaries(ctx, formula):
-    r = ctx.execute(["./brew-wrapper", "list", formula])
+    r = ctx.execute(["./brew-wrapper.sh", "list", formula])
     if ctx.attr.verbose:
         print("[rules_homebrew]", r.return_code, r.stdout, r.stderr)
     binaries = [x.split("/")[-1] for x in r.stdout.splitlines() if "/bin/" in x]
@@ -17,7 +17,7 @@ def _formula_binaries(ctx, formula):
     return unique.keys()
 
 def _formula_is_installed(ctx, formula):
-    r = ctx.execute(["./brew-wrapper", "ls", "--versions", formula])
+    r = ctx.execute(["./brew-wrapper.sh", "ls", "--versions", formula])
     if ctx.attr.verbose:
         print("[rules_homebrew]", r.return_code, r.stdout, r.stderr)
     return r.return_code == 0
@@ -30,12 +30,13 @@ def _brew_packages_impl(repository_ctx):
 
     # necessary for bazel label addressing.
     repository_ctx.template("brew-wrapper.sh", repository_ctx.attr.brew_wrappper_template)
-    repository_ctx.template("BUILD", repository_ctx.attr.build_template, executable = False)
+    #repository_ctx.template("BUILD", repository_ctx.attr.build_template, executable = False)
 
     to_install = _filter_installed_packages(repository_ctx, repository_ctx.attr.formulas)
     extra_args = []
     if repository_ctx.attr.verbose:
         extra_args += ["--verbose"]
+
     # TODO(tmc): need to collect binaries
     if len(to_install) > 0:
         cmd = [
@@ -54,32 +55,32 @@ def _brew_packages_impl(repository_ctx):
 load("@com_github_tmc_rules_homebrew//rules:brew_package.bzl", "brew_package")
 
 brew_package(
-    name = "{formula}",
+    name = "pkg",
     package = "{formula}",
     visibility = ["//visibility:public"],
 )
 '''.format(formula = formula)
         repository_ctx.file("%s/BUILD" % formula, build_file_content)
 
-    return
-
-    for formula in repository_ctx.attr.formulas:
         sh_binary_template = '''
 brew_binary(
     name = "{name}",
-    #path = "{formula}/{version}/bin/{name}",
-    #deps = ["@homebrew//:binaries","@homebrew_core//:allfiles","@homebrew//:allfiles", "@homebrew//:cellar"],
-    #data = ["@homebrew//:binaries","@homebrew_core//:allfiles","@homebrew//:allfiles", "@homebrew//:cellar"],
+    formula = "{formula}",
+    repository_name = "{repository_name}",
+    deps = [':pkg'],
     visibility = ["//visibility:public"],
 )
 '''
+
+        #data = ["@homebrew//:brew", "@homebrew//:library", "@homebrew//:cellar"],
         formula_version = _formula_version(repository_ctx, formula)
         binaries = "\n".join([sh_binary_template.format(
+            repository_name = repository_ctx.attr.name,
             name = binary,
             formula = formula,
             version = formula_version,
         ) for binary in _formula_binaries(repository_ctx, formula)])
-        build_file_content = '''
+        build_file_content += '''
 load("@com_github_tmc_rules_homebrew//rules:brew_binary.bzl", "brew_binary")
 
 {binaries}

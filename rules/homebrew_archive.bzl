@@ -55,6 +55,7 @@ def _homebrew_archive_impl(ctx):
     )
     patch(ctx)
     workspace_and_buildfile(ctx)
+    ctx.execute(["mkdir cache"])
 
     # TODO(tmc): move this to use update_attrs(ctx.attr, _homebrew_archive_attrs.keys(), {"brew_sha256": brew_download_info.sha256, "homebrew_core_sha256": homebrew_core_download_info.sha256})
 

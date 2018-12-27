@@ -4,7 +4,7 @@ def _brew_package_impl(ctx):
     #package = ctx.actions.declare_file(ctx.attr.name)
     tc = ctx.toolchains[BREW_TOOLCHAIN]
     tarball_filename = "%s.tar" % ctx.attr.name
-    print('toolchain:', tc)
+    print("toolchain:", tc)
     output = ctx.outputs.out
     #tarball = ctx.actions.declare_file(output)
     #deps_files = depset(ctx.attr._brew_library.files)
@@ -17,11 +17,12 @@ def _brew_package_impl(ctx):
         output.path,
     )
     inputs, cmd, input_manifests = ctx.resolve_command(
-        command=cmd_raw,
-        expand_locations=True,
-        tools=[tc.compiler]
+        command = cmd_raw,
+        expand_locations = True,
+        tools = [tc.compiler],
     )
-    print(inputs,cmd,input_manifests)
+    print(inputs, cmd, input_manifests)
+
     #cmd = 'tree'
     #ctx.actions.run(
     #    executable = tc.compiler.files.to_list()[0].path,
@@ -31,7 +32,8 @@ def _brew_package_impl(ctx):
     #)
     print(ctx.executable)
     ctx.actions.run_shell(
-        inputs = ctx.attr._brew_library.files,
+        #inputs = ctx.attr._brew_library.files,
+        inputs = [],
         outputs = [output],
         progress_message = "Building %s" % ctx.attr.name,
         command = cmd,
@@ -48,13 +50,14 @@ def _brew_package_impl(ctx):
     return DefaultInfo(
     )
     # ctx.actions.write(package, ctx.expand_location("""#!/bin/bash
+
 # exec $(location @homebrew//:cellar)/{path} $*
 # """.format(path = ctx.attr.path, name = ctx.attr.name)), is_executable = True)
-    # deps_files = [depset(x.files, order = "postorder") for x in ctx.attr.deps]
-    # all_files = depset([package], order = "postorder", transitive = deps_files)
-    # return DefaultInfo(
-    #     runfiles = ctx.runfiles(transitive_files = all_files),
-    # )
+# deps_files = [depset(x.files, order = "postorder") for x in ctx.attr.deps]
+# all_files = depset([package], order = "postorder", transitive = deps_files)
+# return DefaultInfo(
+#     runfiles = ctx.runfiles(transitive_files = all_files),
+# )
 
 brew_package = rule(
     implementation = _brew_package_impl,
@@ -71,5 +74,4 @@ brew_package = rule(
     },
     outputs = {"out": "%{name}.tar"},
     toolchains = [BREW_TOOLCHAIN],
-
 )

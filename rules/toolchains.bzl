@@ -1,4 +1,5 @@
 load("@com_github_tmc_rules_homebrew//rules:providers.bzl", "BrewSDK")
+
 BREW_TOOLCHAIN = "@com_github_tmc_rules_homebrew//:toolchain_type"
 
 def _homebrew_toolchain_info(ctx):
@@ -28,4 +29,3 @@ def homebrew_register_toolchains():
         "@com_github_tmc_rules_homebrew//rules:homebrew",
         "@com_github_tmc_rules_homebrew//rules:linuxbrew",
     )
-
