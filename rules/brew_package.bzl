@@ -27,7 +27,14 @@ def _brew_package_impl(ctx):
     #deps_files = depset(ctx.attr._brew_allfiles.files)
     #all_files = depset([tarball], order = "postorder", transitive = deps_files)
     #all_files = depset([output], transitive = deps_files)
-    trans_srcs = depset(ctx.files.srcs, transitive=[ctx.attr._brew_allfiles.files])
+
+    #trans_srcs = depset(ctx.files.srcs, transitive=[ctx.attr._brew_allfiles.files])
+    trans_srcs = depset(ctx.files.srcs, transitive=[
+        #ctx.attr._brew_library.files,
+        #ctx.attr._brew_cellar.files,
+        ctx.attr._brew_allfiles.files,
+    ])
+
     #trans_srcs = depset(ctx.files.srcs, transitive=[])
 
     srcs_list = trans_srcs.to_list()
@@ -92,8 +99,8 @@ brew_package = rule(
         "package": attr.string(mandatory = True),
         "srcs": attr.label_list(allow_files = True),
         #"data": attr.label_list(allow_files = True),
-        #"_brew_library": attr.label(default = "@homebrew//:library"),
-        #"_brew_cellar": attr.label(default = "@homebrew//:cellar"),
+        "_brew_library": attr.label(default = "@homebrew//:library"),
+        "_brew_cellar": attr.label(default = "@homebrew//:cellar"),
         #"_brew_cache": attr.label(default = "@homebrew//:cache", allow_files=True),
         #"_brew_cache": attr.label(default = "@homebrew//:cache", allow_files=True),
         "_brew_allfiles": attr.label(default = "@homebrew//:allfiles", allow_files=True),
