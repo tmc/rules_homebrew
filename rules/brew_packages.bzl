@@ -55,11 +55,11 @@ def _brew_packages_impl(repository_ctx):
         build_file_content = '''
 load("@com_github_tmc_rules_homebrew//rules:brew_package.bzl", "brew_package")
 
-brew_package(
-    name = "pkg",
-    package = "{formula}",
-    visibility = ["//visibility:public"],
-)
+#brew_package(
+#    name = "pkg",
+#    package = "{formula}",
+#    visibility = ["//visibility:public"],
+#)
 '''.format(formula = formula)
         repository_ctx.file("%s/BUILD" % formula, build_file_content)
 
@@ -68,7 +68,7 @@ brew_binary(
     name = "{name}",
     formula = "{formula}",
     repository_name = "{repository_name}",
-    deps = [':pkg'],
+    deps = ["@homebrew//:allfiles"],
     visibility = ["//visibility:public"],
 )
 '''

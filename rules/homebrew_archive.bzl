@@ -1,11 +1,17 @@
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "patch", "workspace_and_buildfile")
 
 BUILD_FILE_CONTENT = '''
-filegroup(
-    name = "brew",
-    srcs = ["bin/brew"],
-    visibility = ["//visibility:public"],
-)
+#filegroup(
+#    name = "brew",
+#    srcs = ["bin/brew"],
+#    visibility = ["//visibility:public"],
+#)
+
+#filegroup(
+#    name = "allbinaries",
+#    srcs = glob(["bin/*"], exclude=["bin/brew"]),
+#    visibility = ["//visibility:public"],
+#)
 
 filegroup(
     name = "library",

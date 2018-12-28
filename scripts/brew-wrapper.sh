@@ -9,7 +9,7 @@ test -f ../homebrew/bin/brew || (
 	exit 1
 )
 export HOMEBREW_NO_AUTO_UPDATE=1
-export HOMEBREW_CACHE=$(pwd)/../homebrew/cache
+#export HOMEBREW_CACHE=$(pwd)/../homebrew/cache
 #export HOMEBREW_BUILD_FROM_SOURCE=1
 #export HOMEBREW_DOWNLOAD_ONLY=1
 ../homebrew/bin/brew $*
