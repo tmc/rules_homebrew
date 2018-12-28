@@ -4,7 +4,7 @@
 
      build_bottle_preinstall if build_bottle?
 
-+    return if ENV['HOMEBREW_DOWNLOAD_ONLY'] != ''
++    return unless ENV['HOMEBREW_DOWNLOAD_ONLY'].nil?
 +
      unless @poured_bottle
        build
@@ -13,7 +13,7 @@
    end
 
    def finish
-+    return if ENV['HOMEBREW_DOWNLOAD_ONLY'] != ''
++    return unless ENV['HOMEBREW_DOWNLOAD_ONLY'].nil?
 +
      return if only_deps?
 
