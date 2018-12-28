@@ -35,40 +35,31 @@ filegroup(
 )
 
 sh_binary(
-    name = "lejq",
-    srcs = ["bin/jq"],
+    name = "brew",
+    srcs = ["brew-wrapper.sh"],
     visibility = ["//visibility:public"],
 )
-
-exports_files(["cache"])
 '''
 
-def generate_build_file(ctx):
-    binaries = ''
-    formulas = ctx.attr.packages.keys()
-    for formula in formulas:
-        sh_binary_template = '''
+sh_binary_template = '''
 sh_binary(
     name = "{name}",
     srcs = ["bin/{name}"],
     visibility = ["//visibility:public"],
 )
 '''
-        for binary in ctx.attr.packages[formula]:
-            binaries += sh_binary_template.format(
-                name = binary,
-            )
+
+def generate_build_file(ctx):
+    binaries = ''
+    for binary in _installed_binaries(ctx):
+        binaries += sh_binary_template.format(
+            name = binary,
+        )
 
     return BUILD_FILE_CONTENT + binaries
 
 def _homebrew_repository_impl(ctx):
     """Implementation of the homebrew_repository rule."""
-
-    formulas = ctx.attr.packages.keys()
-
-    build_file_content = generate_build_file(ctx)
-    ctx.file("BUILD", build_file_content)
-    ctx.file("WORKSPACE", "workspace(name = \"{name}\")\n".format(name = ctx.name))
 
     # network access
     url = "https://github.com/Homebrew/brew/archive/%s.tar.gz" % ctx.attr.brew_tag
@@ -102,33 +93,30 @@ def _homebrew_repository_impl(ctx):
     )
     patch(ctx)
 
-    ctx.execute(["mkdir","cache"], quiet=False)
+    ctx.execute(["mkdir","cache"])
 
     ctx.template("brew-wrapper.sh", ctx.attr.brew_wrappper_template)
     #ctx.template("BUILD", ctx.attr.build_template, executable = False)
 
-    to_fetch = _filter_installed_packages(ctx, formulas)
-    to_fetch = formulas
     extra_args = []
     if ctx.attr.verbose:
         extra_args += ["--verbose"]
 
-    if len(to_fetch) > 0:
-        cmd = [
-            "./brew-wrapper.sh",
-            "install",
-            #"--no-sandbox",
-            # TODO(tmc): "--ignore-dependencies", # force our hand
-        ] + to_fetch
-        result = ctx.execute(cmd, quiet = False)
-        if ctx.attr.verbose:
-            print("[rules_homebrew]", result.return_code, result.stdout, result.stderr)
-        if result.return_code != 0:
-            fail("[brew_packges] " + result.stderr)
-
-    result = ctx.execute(['ls', '-alh', 'bin'], quiet = False)
+    cmd = [
+        "./brew-wrapper.sh",
+        "install",
+        #"--no-sandbox",
+        # TODO(tmc): "--ignore-dependencies", # force our hand
+    ] + ctx.attr.packages
+    result = ctx.execute(cmd, quiet = ctx.attr.verbose == False)
     if ctx.attr.verbose:
         print("[rules_homebrew]", result.return_code, result.stdout, result.stderr)
+    if result.return_code != 0:
+        fail("[brew_packges] " + result.stderr)
+
+    build_file_content = generate_build_file(ctx)
+    ctx.file("BUILD", build_file_content)
+    ctx.file("WORKSPACE", "workspace(name = \"{name}\")\n".format(name = ctx.name))
 
     # TODO(tmc): move this to use update_attrs(ctx.attr, _homebrew_repository_attrs.keys(), {"brew_sha256": brew_download_info.sha256, "homebrew_core_sha256": homebrew_core_download_info.sha256})
 
@@ -137,6 +125,10 @@ def _formula_version(ctx, formula):
     if ctx.attr.verbose:
         print("[rules_homebrew]", r.return_code, r.stdout, r.stderr)
     return r.stdout.strip().split(" ")[-1]
+
+def _installed_binaries(ctx):
+    r = ctx.execute(["ls", "bin"])
+    return [x for x in r.stdout.splitlines() if x != "brew"]
 
 def _formula_binaries(ctx, formula):
     r = ctx.execute(["./brew-wrapper.sh", "list", formula])
@@ -171,7 +163,7 @@ _homebrew_repository_attrs = {
     "workspace_file": attr.label(allow_single_file = True),
     "workspace_file_content": attr.string(),
 
-    "packages": attr.string_list_dict(mandatory = True),
+    "packages": attr.string_list(mandatory = True),
     "brew_wrappper_template": attr.label(default = "//scripts:brew-wrapper.sh"),
     "build_template": attr.label(default = "//scripts:BUILD.brew_packages"),
     "verbose": attr.bool(),
