@@ -34,11 +34,6 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-sh_binary(
-    name = "brew",
-    srcs = ["brew-wrapper.sh"],
-    visibility = ["//visibility:public"],
-)
 '''
 
 sh_binary_template = '''
@@ -96,7 +91,6 @@ def _homebrew_repository_impl(ctx):
     ctx.execute(["mkdir","cache"])
 
     ctx.template("brew-wrapper.sh", ctx.attr.brew_wrappper_template)
-    #ctx.template("BUILD", ctx.attr.build_template, executable = False)
 
     extra_args = []
     if ctx.attr.verbose:
@@ -155,8 +149,7 @@ _homebrew_repository_attrs = {
     "homebrew_core_sha256": attr.string(default = "3f2c429cc6416ee9c45500d8f5d3e1c8e9876422a2906888e31303213c167a11"),
     "brew_urls": attr.string_list(),
     "homebrew_core_urls": attr.string_list(),
-    "patches": attr.label_list(default = ["@com_github_tmc_rules_homebrew//patches:homebrew-download-only.patch"]),
-    #"patches": attr.label_list(default = []),
+    "patches": attr.label_list(default = []),
     "patch_tool": attr.string(default = "patch"),
     "patch_args": attr.string_list(default = ["-p0"]),
     "patch_cmds": attr.string_list(default = []),
@@ -165,7 +158,6 @@ _homebrew_repository_attrs = {
 
     "packages": attr.string_list(mandatory = True),
     "brew_wrappper_template": attr.label(default = "//scripts:brew-wrapper.sh"),
-    "build_template": attr.label(default = "//scripts:BUILD.brew_packages"),
     "verbose": attr.bool(),
 }
 
