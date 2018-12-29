@@ -1,0 +1,98 @@
+diff --git a/Library/Homebrew/build.rb b/Library/Homebrew/build.rb
+index 82acee2..4663bdb 100644
+--- a/Library/Homebrew/build.rb
++++ b/Library/Homebrew/build.rb
+@@ -71,8 +71,11 @@ class Build
+     keg_only_deps = formula_deps.select(&:keg_only?)
+     run_time_deps = deps.reject(&:build?).map(&:to_formula)
+ 
+-    formula_deps.each do |dep|
+-      fixopt(dep) unless dep.opt_prefix.directory?
++    # in url-only mode skip dependency setup
++    if ENV['HOMEBREW_EMIT_URLS_ONLY'].nil?
++      formula_deps.each do |dep|
++        fixopt(dep) unless dep.opt_prefix.directory?
++      end
+     end
+ 
+     ENV.activate_extensions!
+diff --git a/Library/Homebrew/cmd/install.rb b/Library/Homebrew/cmd/install.rb
+index f7c233b..8f4d379 100644
+--- a/Library/Homebrew/cmd/install.rb
++++ b/Library/Homebrew/cmd/install.rb
+@@ -327,6 +327,7 @@ module Homebrew
+     fi.git                  = ARGV.git?
+     fi.prelude
+     fi.install
++    return unless ENV['HOMEBREW_EMIT_URLS_ONLY'].nil?
+     fi.finish
+   rescue FormulaInstallationAlreadyAttemptedError
+     # We already attempted to install f as part of the dependency tree of
+diff --git a/Library/Homebrew/download_strategy.rb b/Library/Homebrew/download_strategy.rb
+index 6fba4ab..a1b3a9b 100644
+--- a/Library/Homebrew/download_strategy.rb
++++ b/Library/Homebrew/download_strategy.rb
+@@ -286,6 +286,10 @@ class CurlDownloadStrategy < AbstractFileDownloadStrategy
+       url = urls.shift
+ 
+       ohai "Downloading #{url}"
++      if not ENV['HOMEBREW_EMIT_URLS_ONLY'].nil?
++        ohai "emiturls: #{@name} #{url}"
++        return
++      end
+ 
+       resolved_url, _, url_time = resolve_url_basename_time(url)
+ 
+diff --git a/Library/Homebrew/formula_installer.rb b/Library/Homebrew/formula_installer.rb
+index 912a069..939a266 100644
+--- a/Library/Homebrew/formula_installer.rb
++++ b/Library/Homebrew/formula_installer.rb
+@@ -315,6 +315,7 @@ class FormulaInstaller
+ 
+     unless @poured_bottle
+       build
++      return unless ENV['HOMEBREW_EMIT_URLS_ONLY'].nil?
+       clean
+ 
+       # Store the formula used to build the keg in the keg.
+@@ -592,6 +593,7 @@ class FormulaInstaller
+     fi.prelude
+     oh1 "Installing #{formula.full_name} dependency: #{Formatter.identifier(dep.name)}"
+     fi.install
++    return unless ENV['HOMEBREW_EMIT_URLS_ONLY'].nil?
+     fi.finish
+   rescue Exception # rubocop:disable Lint/RescueException
+     ignore_interrupts do
+@@ -618,6 +620,8 @@ class FormulaInstaller
+   end
+ 
+   def finish
++    return unless ENV['HOMEBREW_DOWNLOAD_ONLY'].nil?
++
+     return if only_deps?
+ 
+     ohai "Finishing up" if verbose?
+@@ -762,6 +766,8 @@ class FormulaInstaller
+       end
+     end
+ 
++    return unless ENV['HOMEBREW_EMIT_URLS_ONLY'].nil?
++
+     formula.update_head_version
+ 
+     if !formula.prefix.directory? || Keg.new(formula.prefix).empty_installation?
+diff --git a/Library/Homebrew/resource.rb b/Library/Homebrew/resource.rb
+index 81e820e..eb770c4 100644
+--- a/Library/Homebrew/resource.rb
++++ b/Library/Homebrew/resource.rb
+@@ -70,6 +70,10 @@ class Resource
+       raise ArgumentError, "target directory or block is required"
+     end
+ 
++    if not ENV['HOMEBREW_EMIT_URLS_ONLY'].nil?
++      fetch
++      return
++    end
+     verify_download_integrity(fetch)
+     prepare_patches
+     unpack(target, &block)
