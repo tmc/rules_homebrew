@@ -5,7 +5,8 @@ BUILD_FILE_CONTENT = '''
 filegroup(
     name = "allfiles",
     srcs = glob(
-        ["*", "**/*"],
+        #["*", "**/*"],
+        ["bin/*"],
         exclude=["**/*:*", "**/* *"],
     ),
     visibility = ["//visibility:public"],
@@ -92,10 +93,9 @@ def _homebrew_repository_impl(ctx):
     result = ctx.execute(cmd, quiet = ctx.attr.verbose == False)
     formula_url_tuples = _parse_urls(ctx, result)
 
-    t = _gen_http_archives(ctx, formula_url_tuples)
-    ctx.file("sources.bzl", HTTP_ARCHIVES_TEMPLATE.format(
-        archives = t,
-    ))
+    deps = {}
+    for p in ctx.attr.packages:
+        deps[p] = _formula_dependencies(ctx, p)
 
     #cmd = [
     #    "./brew-wrapper.sh",
@@ -108,26 +108,52 @@ def _homebrew_repository_impl(ctx):
         fail("[brew_packages] " + result.stderr)
 
     build_file_content = generate_build_file(ctx)
-    ctx.file("BUILD", build_file_content)
-    ctx.file("WORKSPACE", "workspace(name = \"{name}\")\n".format(name = ctx.name))
 
+    workspace_file_content = "workspace(name = \"{name}\")\n".format(name = ctx.name)
+
+    t = _gen_http_archives(ctx, formula_url_tuples)
+    ctx.file("sources.bzl", HTTP_FILES_TEMPLATE.format(
+        archives = t,
+        deps = repr(deps),
+    ))
+
+    _gen_package_build_files(ctx)
+
+    ctx.file("BUILD", build_file_content)
+    ctx.file("WORKSPACE", workspace_file_content)
     # TODO(tmc): move this to use update_attrs(ctx.attr, _homebrew_repository_attrs.keys(), {"brew_sha256": brew_download_info.sha256, "homebrew_core_sha256": homebrew_core_download_info.sha256})
 
-HTTP_ARCHIVES_TEMPLATE = '''
+HTTP_FILES_TEMPLATE = '''
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 def brew_sources():
 {archives}
 '''
 
-HTTP_ARCHIVE_TEMPLATE = '''
+HTTP_FILE_TEMPLATE = '''
     http_file(
-        name = "{name}",
+        name = "brew_{name}",
         urls = ["{url}"],
         sha256 = "{sha256}",
         visibility = ["//visibility:public"],
     )
 '''
+
+PACKAGE_TEMPLATE = '''
+load("@com_github_tmc_rules_homebrew//rules:brew_package.bzl", "brew_package")
+
+brew_package(
+    name = "{name}",
+    srcs = ["//:allfiles", "@brew_{name}//file"],
+    visibility = ["//visibility:public"],
+)
+'''
+
+def _gen_package_build_files(ctx):
+    for p in ctx.attr.packages:
+        ctx.file("%s/BUILD" % p, PACKAGE_TEMPLATE.format(
+            name = p,
+        ))
 
 def _gen_http_archives(ctx, formula_url_tuples):
     """generates http_archives for a list of urls"""
@@ -135,8 +161,8 @@ def _gen_http_archives(ctx, formula_url_tuples):
     for fut in formula_url_tuples:
         print("fut:", fut)
         formula, url = fut
-        archives += HTTP_ARCHIVE_TEMPLATE.format(
-            name = "brew_%s" % formula,
+        archives += HTTP_FILE_TEMPLATE.format(
+            name = formula,
             url = url,
             sha256 = "",
         )
@@ -154,6 +180,17 @@ def _gen_git_repo(ctx):
     ctx.execute(["git", "init"])
     ctx.execute(["git", "add", "."])
     ctx.execute(["git", "commit", "-m", "x"])
+
+def _formula_dependencies(ctx, formula):
+    r = ctx.execute(["./brew-wrapper.sh", "info", formula])
+    if ctx.attr.verbose:
+        print("[rules_homebrew]", r.return_code, r.stdout, r.stderr)
+    lines = r.stdout.splitlines()
+    deps = []
+    for l in lines:
+        if l == '==> Dependencies':
+            fail('found deps')
+    return deps
 
 def _formula_version(ctx, formula):
     r = ctx.execute(["./brew-wrapper.sh", "ls", "--versions", formula])
