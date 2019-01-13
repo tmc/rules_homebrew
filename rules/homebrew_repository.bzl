@@ -61,10 +61,6 @@ def _homebrew_repository_impl(ctx):
     tag = ctx.attr.homebrew_tag
     url = "https://github.com/Homebrew/brew/archive/%s.tar.gz" % ctx.attr.homebrew_tag
     url_sha = ctx.attr.homebrew_sha256
-    if 'Linux' in ctx.execute(["uname"]).stdout:
-        tag = ctx.attr.linuxbrew_tag
-        url = "https://github.com/Linuxbrew/brew/archive/%s.tar.gz" % ctx.attr.linuxbrew_tag
-        url_sha = ctx.attr.linuxbrew_sha256
 
     all_brew_urls = []
     if ctx.attr.brew_urls:
@@ -82,10 +78,6 @@ def _homebrew_repository_impl(ctx):
     homebrew_core_commit = ctx.attr.homebrew_core_commit
     homebrew_core_url = "https://codeload.github.com/Homebrew/homebrew-core/zip/%s" % ctx.attr.homebrew_core_commit
     homebrew_core_sha = ctx.attr.homebrew_core_sha256
-    if 'Linux' in ctx.execute(["uname"]).stdout:
-        homebrew_core_commit = ctx.attr.linuxbrew_core_commit
-        homebrew_core_url = "https://codeload.github.com/Linuxbrew/homebrew-core/zip/%s" % ctx.attr.linuxbrew_core_commit
-        homebrew_core_sha = ctx.attr.linuxbrew_core_sha256
 
     all_homebrew_core_urls = []
     if ctx.attr.homebrew_core_urls:
@@ -156,14 +148,10 @@ def _formula_is_installed(ctx, formula):
 def _filter_installed_packages(ctx, formulas):
     return [f for f in formulas if not _formula_is_installed(ctx, f)]
 _homebrew_repository_attrs = {
-    "homebrew_tag": attr.string(default = "1.8.6"),
-    "homebrew_sha256": attr.string(default = "9d765c882bf6e53ff68ce410440fb8ff12ee126b508eb0d3d5249198071b7b4f"),
-    "linuxbrew_tag": attr.string(default = "1.8.6"),
-    "linuxbrew_sha256": attr.string(default = "39da5bdcd4379137d857ffcc9e536931f9b9bc3a14e3666492e23d56cd2a71e4"),
-    "homebrew_core_commit": attr.string(default = "a86ae8fc2b24001b3c6460a46dbfc6e323d2a4d1"),
-    "homebrew_core_sha256": attr.string(default = "f9b7df87020af9e7f0a16db311d8636d6f244f5abec8fdafa97a7079c53177dd"),
-    "linuxbrew_core_commit": attr.string(default = "e2c0f25cb9ee98ed7715dcc3ea429185806ce455"),
-    "linuxbrew_core_sha256": attr.string(default = "cb2857f798ba203ac7453ca0f254b9c5ee7cc7a3d742de2f5b80b078af003e27"),
+    "homebrew_tag": attr.string(default = "1.9.1"),
+    "homebrew_sha256": attr.string(default = "6a08d947f53e6abdced914f9b661e1efd941cefa987b4802e9543eda0cd03e1f"),
+    "homebrew_core_commit": attr.string(default = "eeea1107214e1abf371d602d963b045f0462d3c6"),
+    "homebrew_core_sha256": attr.string(default = "7a67e32a2c8730420a02551308728aa490d0201266697e36e459ed319d6da3aa"),
     "brew_urls": attr.string_list(),
     "homebrew_core_urls": attr.string_list(),
     "patches": attr.label_list(default = []),
