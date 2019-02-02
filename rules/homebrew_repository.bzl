@@ -148,10 +148,10 @@ def _formula_is_installed(ctx, formula):
 def _filter_installed_packages(ctx, formulas):
     return [f for f in formulas if not _formula_is_installed(ctx, f)]
 _homebrew_repository_attrs = {
-    "homebrew_tag": attr.string(default = "1.9.1"),
-    "homebrew_sha256": attr.string(default = "6a08d947f53e6abdced914f9b661e1efd941cefa987b4802e9543eda0cd03e1f"),
-    "homebrew_core_commit": attr.string(default = "eeea1107214e1abf371d602d963b045f0462d3c6"),
-    "homebrew_core_sha256": attr.string(default = "7a67e32a2c8730420a02551308728aa490d0201266697e36e459ed319d6da3aa"),
+    "homebrew_tag": attr.string(default = "2.0.0"),
+    "homebrew_sha256": attr.string(default = "154db4fc7cd3853e3e7939462c546db76f2e132c5cb2133490bf02abfcf531f5"),
+    "homebrew_core_commit": attr.string(default = "98017e7ff3e43e394280946eda8003479e1e7be7"),
+    "homebrew_core_sha256": attr.string(default = "ad18d82d39ce90d7b8ac3f0ddd4503d56505c83d3b23160365380a4655eee0d1"),
     "brew_urls": attr.string_list(),
     "homebrew_core_urls": attr.string_list(),
     "patches": attr.label_list(default = []),
