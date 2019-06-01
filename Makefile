@@ -6,7 +6,12 @@ IMAGE ?= rules_homebrew
 CACHEDIR ?= .cache
 
 .PHONY: all
-all: ci
+all: docs ci
+
+.PHONY: docs
+docs: deps
+	bazel build //docs && cp bazel-bin/docs/docs.md docs
+	@chmod +w docs/docs.md
 
 .PHONY: deps
 ifeq ($(UNAME),Darwin)

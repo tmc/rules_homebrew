@@ -45,14 +45,13 @@ sh_binary(
 '''
 
 def generate_build_file(ctx):
-    binaries = ''
+    binaries = ""
     for binary in _installed_binaries(ctx):
         binaries += sh_binary_template.format(
             name = binary,
         )
 
     return BUILD_FILE_CONTENT + binaries
-
 
 def _homebrew_repository_impl(ctx):
     """Implementation of the homebrew_repository rule."""
@@ -93,7 +92,7 @@ def _homebrew_repository_impl(ctx):
     )
     patch(ctx)
 
-    ctx.execute(["mkdir","cache"])
+    ctx.execute(["mkdir", "cache"])
 
     ctx.template("brew-wrapper.sh", ctx.attr.brew_wrappper_template)
 
@@ -147,6 +146,7 @@ def _formula_is_installed(ctx, formula):
 
 def _filter_installed_packages(ctx, formulas):
     return [f for f in formulas if not _formula_is_installed(ctx, f)]
+
 _homebrew_repository_attrs = {
     "homebrew_tag": attr.string(default = "2.1.0"),
     "homebrew_sha256": attr.string(default = "d914b289753c3ff373c1d35cd5b341b270d63e12839469d57e574e5f9c7052b6"),
@@ -160,15 +160,12 @@ _homebrew_repository_attrs = {
     "patch_cmds": attr.string_list(default = []),
     "workspace_file": attr.label(allow_single_file = True),
     "workspace_file_content": attr.string(),
-
     "packages": attr.string_list(mandatory = True),
     "brew_wrappper_template": attr.label(default = "//scripts:brew-wrapper.sh"),
     "verbose": attr.bool(),
 }
 
-
 homebrew_repository = repository_rule(
     implementation = _homebrew_repository_impl,
     attrs = _homebrew_repository_attrs,
 )
-
